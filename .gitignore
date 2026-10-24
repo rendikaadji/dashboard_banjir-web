@@ -25,3 +25,15 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Konfigurasi alat AI di komputer masing-masing (tidak untuk GitHub)
+/.agents
+/.claude
+/.gemini
+/.antigravity
+/.mcp.json
+/AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/boost.json
+/graphify-out
