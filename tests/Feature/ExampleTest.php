@@ -16,17 +16,15 @@ class ExampleTest extends TestCase
     }
 
     /**
-     * Uji pemuatan antarmuka dashboard utama, kiosk, dan publik warga.
+     * Uji pemuatan landing publik, dashboard admin, dan kiosk.
      */
     public function test_the_application_returns_a_successful_response(): void
     {
         $response = $this->get('/');
         $response->assertStatus(200);
 
-        $kiosk = $this->get('/kiosk');
-        $kiosk->assertStatus(200);
-
-        $public = $this->get('/public');
-        $public->assertStatus(200);
+        $this->get('/admin/dashboard')->assertStatus(200);
+        $this->get('/admin/kiosk')->assertStatus(200);
+        $this->get('/public')->assertRedirect('/');
     }
 }

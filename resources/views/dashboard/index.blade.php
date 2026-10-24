@@ -174,13 +174,18 @@
                 </div>
             </div>
             
-            <div class="relative z-0 isolate w-full h-80 sm:h-96 rounded-xl overflow-hidden border border-slate-800 bg-white">
-                <div id="map-siteplan" class="w-full h-full"></div>
+            <div class="relative z-0 isolate w-full rounded-xl overflow-hidden border border-slate-800 bg-white">
+                <div id="map-siteplan" class="w-full h-80 sm:h-[26rem]" style="background:#fff"></div>
+
+                <!-- Panel detail titik: melayang di kanan peta (sm ke atas), di bawah peta pada HP -->
+                <aside id="node-panel" hidden aria-live="polite"
+                       class="bg-slate-900 text-slate-100 border-t border-slate-800 sm:border sm:rounded-xl sm:absolute sm:top-3 sm:right-3 sm:bottom-3 sm:w-72 z-[500] overflow-y-auto shadow-2xl shadow-black/40"></aside>
             </div>
             <div class="mt-2.5 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Klik pada pin untuk melihat status telemetri live</span>
+                <span>Klik pin atau titik di daftar untuk melihat data sensor lengkap</span>
                 <span class="text-slate-500 font-mono">Taman Cipulir Estate · RW 08</span>
             </div>
+            <div id="node-list" class="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2"></div>
         </div>
 
         <!-- Grafik Time-Series Sensor Utama (5 Kolom) -->
@@ -342,40 +347,6 @@
         'DASHBOARD': '#ec4899'
     };
 
-    // ── 1. Fungsi Popup Informatif Berseragam ──
-    function getTypeBadge(type) {
-        const badges = {
-            'WATER_LEVEL': '<span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px;">🔵 Water Level</span>',
-            'FLOW': '<span style="background:#dcfce7;color:#166534;padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px;">🟢 Flow Arus</span>',
-            'RAINFALL': '<span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px;">🔴 Curah Hujan</span>',
-            'DASHBOARD': '<span style="background:#fce7f3;color:#9d174d;padding:2px 7px;border-radius:4px;font-weight:700;font-size:10px;">🟣 Posko</span>'
-        };
-        return badges[type] || badges['WATER_LEVEL'];
-    }
-
-    function renderPopup(id, label, type, valText, zone, battery, isCritical, desc) {
-        return `
-            <div style="color:#0f172a;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;line-height:1.4;max-width:260px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-bottom:5px;">
-                    <span style="font-weight:800;font-family:monospace;">${id}</span>
-                    ${getTypeBadge(type)}
-                </div>
-                <div style="font-weight:700;color:#1e293b;margin-bottom:4px;">${label}</div>
-                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:11px;color:#475569;line-height:1.35;">
-                    <b style="color:#0f172a;">Fungsi Titik:</b> ${desc}
-                </div>
-                <div style="display:flex;align-items:baseline;justify-content:space-between;background:#f1f5f9;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-                    <span style="font-size:14px;font-weight:800;color:#0f172a;">${valText}</span>
-                    <span style="font-size:11px;font-weight:600;color:#64748b;">${zone}</span>
-                </div>
-                <div style="font-size:10px;color:#94a3b8;display:flex;justify-content:space-between;border-top:1px dashed #e2e8f0;padding-top:4px;margin-top:4px;">
-                    <span>Baterai: <b>${battery}V</b></span>
-                    <span style="color:${isCritical ? '#dc2626' : '#16a34a'};font-weight:700;">${isCritical ? '⚠️ Kritis' : '✅ Normal'}</span>
-                </div>
-            </div>
-        `;
-    }
-
     // ── 2. Fungsi Pin Teardrop SVG (Konsisten untuk Site Plan & GPS) ──
     // Inject pulse animation keyframe sekali
     if (!document.getElementById('pin-pulse-css')) {
@@ -419,15 +390,80 @@
         return (n.latest_reading ? n.latest_reading.water_level_cm : 0) + ' cm';
     }
 
-    // Helper: build popup HTML untuk sebuah node
-    function buildNodePopup(n) {
-        const desc = nodeDescriptions[n.node_id] || 'Sensor pemantau kondisi hidrologi kompleks TCE.';
-        return renderPopup(
-            n.node_id, n.label || '', n.node_type, getValText(n),
-            n.zone ? n.zone.code : 'TCE',
-            n.latest_reading ? n.latest_reading.battery_v : 12.6,
-            n.is_critical, desc
-        );
+    // Waktu relatif ("3 mnt lalu") dari timestamp ISO
+    function timeAgo(iso) {
+        if (!iso) return 'belum pernah';
+        const sec = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+        if (sec < 60) return sec + ' dtk lalu';
+        if (sec < 3600) return Math.round(sec / 60) + ' mnt lalu';
+        if (sec < 86400) return Math.round(sec / 3600) + ' jam lalu';
+        return Math.round(sec / 86400) + ' hari lalu';
+    }
+
+    const typeMeta = {
+        'WATER_LEVEL': { label: 'Tinggi Muka Air', color: '#3b82f6' },
+        'FLOW': { label: 'Arus Air', color: '#22c55e' },
+        'RAINFALL': { label: 'Curah Hujan', color: '#ef4444' },
+        'DASHBOARD': { label: 'Posko', color: '#ec4899' }
+    };
+
+    // Data lengkap satu titik untuk panel detail
+    function buildDetail(n) {
+        const r = n.latest_reading || {};
+        const fmt = (v, unit, d) => (v === null || v === undefined) ? '-' : Number(v).toFixed(d === undefined ? 1 : d) + ' ' + unit;
+        let stats = [];
+        if (n.node_type === 'WATER_LEVEL') {
+            stats = [['TMA (EWMA)', fmt(r.water_level_ewma, 'cm')], ['Laju naik', fmt(r.rise_rate_cmh, 'cm/jam')],
+                     ['Jarak sensor ke air', fmt(r.distance_cm, 'cm')], ['Tinggi pasang', fmt(n.mount_height_cm, 'cm', 0)]];
+        } else if (n.node_type === 'FLOW') {
+            stats = [['Kecepatan arus', fmt(r.flow_velocity_ms, 'm/s', 2)], ['Debit', fmt(r.flow_lpm, 'L/mnt')]];
+        } else if (n.node_type === 'RAINFALL') {
+            stats = [['Intensitas hujan', fmt(r.rain_rate_mmh, 'mm/jam')], ['Akumulasi', fmt(r.rainfall_mm, 'mm')],
+                     ['Kecepatan angin', fmt(r.wind_speed_ms, 'm/s')]];
+        }
+        stats.push(['Baterai', fmt(r.battery_v, 'V')], ['Panel surya', fmt(r.solar_v, 'V')],
+                   ['Sinyal (RSSI)', r.rssi !== undefined && r.rssi !== null ? r.rssi + ' dBm' : '-'],
+                   ['Kualitas data', r.quality || '-'], ['Status node', n.status || '-'], ['Firmware', n.firmware_version || '-']);
+        return {
+            id: n.node_id, label: n.label || '', type: n.node_type, main: getValText(n),
+            zone: n.zone ? n.zone.name : 'TCE', critical: !!n.is_critical,
+            desc: nodeDescriptions[n.node_id] || 'Sensor pemantau kondisi hidrologi kompleks TCE.',
+            stats: stats, footer: 'Data terakhir ' + timeAgo(r.ts || n.last_seen_at)
+        };
+    }
+
+    const kioskDetail = {
+        id: 'POS-RW-08', label: 'Pos Satpam Utama & Monitor Kiosk 24 Jam', type: 'DASHBOARD', main: 'Kiosk Aktif',
+        zone: 'RW 08', critical: false, desc: nodeDescriptions['POS-RW-08'],
+        stats: [['Layar kiosk', 'Aktif 24 jam'], ['Sirine darurat', 'Dikendalikan dari sini']], footer: ''
+    };
+
+    function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+    function renderPanel(d) {
+        const m = typeMeta[d.type] || typeMeta['WATER_LEVEL'];
+        const badge = d.critical
+            ? '<span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-red-950 text-red-300 border border-red-900">Titik kritis</span>'
+            : '<span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-900">Normal</span>';
+        return '<div class="p-4">' +
+            '<div class="flex items-start justify-between gap-2">' +
+                '<div class="min-w-0"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:' + m.color + '"></span>' +
+                '<span class="font-mono text-xs font-bold text-white">' + esc(d.id) + '</span></div>' +
+                '<div class="mt-0.5 text-[11px] text-slate-400">' + m.label + '</div></div>' +
+                '<button type="button" id="node-panel-close" class="p-1.5 -m-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-emerald-400" aria-label="Tutup detail titik">' +
+                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' +
+            '</div>' +
+            '<h4 class="mt-3 text-sm font-semibold text-white leading-snug">' + esc(d.label) + '</h4>' +
+            '<div class="mt-3 flex items-end justify-between gap-2"><div class="text-3xl font-bold tracking-tight text-white font-mono">' + esc(d.main) + '</div>' + badge + '</div>' +
+            '<div class="mt-1 text-[11px] text-slate-400">' + esc(d.zone) + '</div>' +
+            '<p class="mt-3 text-xs leading-relaxed text-slate-300">' + esc(d.desc) + '</p>' +
+            '<dl class="mt-3 divide-y divide-slate-800 border-t border-slate-800">' +
+                d.stats.map(function (x) {
+                    return '<div class="flex items-baseline justify-between gap-3 py-1.5 text-xs"><dt class="text-slate-400">' + x[0] + '</dt><dd class="font-semibold text-slate-100 text-right">' + esc(String(x[1])) + '</dd></div>';
+                }).join('') +
+            '</dl>' +
+            (d.footer ? '<p class="mt-2 text-[11px] text-slate-400">' + esc(d.footer) + '</p>' : '') +
+        '</div>';
     }
 
     // ── 3. Data Nodes dari Server ──
@@ -438,11 +474,45 @@
     const sitePlanBounds = [[0, 0], [imgHeight, imgWidth]];
 
     const mapSitePlan = L.map('map-siteplan', {
-        crs: L.CRS.Simple, minZoom: -0.5, maxZoom: 2.5,
-        zoomSnap: 0.1, scrollWheelZoom: false, attributionControl: false
+        crs: L.CRS.Simple, minZoom: -2, maxZoom: 2.5,
+        zoomSnap: 0.1, attributionControl: false,
+        // Peta diam: zoom hanya terjadi lewat klik pin
+        zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+        touchZoom: false, boxZoom: false, keyboard: false
     });
     L.imageOverlay('{{ asset('images/tce_site_plan.png') }}', sitePlanBounds).addTo(mapSitePlan);
     mapSitePlan.fitBounds(sitePlanBounds);
+
+    // Klik pin: zoom ke pin dan tampilkan panel detail. Tutup panel: kembali ke ukuran semula.
+    const panelEl = document.getElementById('node-panel');
+    const wide = () => window.matchMedia('(min-width: 640px)').matches;
+    let activeId = null;
+
+    function selectNode(id, detail, latlng) {
+        activeId = id;
+        panelEl.innerHTML = renderPanel(detail);
+        panelEl.hidden = false;
+        panelEl.scrollTop = 0;
+        document.getElementById('node-panel-close').addEventListener('click', clearSelection);
+        mapSitePlan.invalidateSize();
+        const z = Math.min(mapSitePlan.getMaxZoom(), mapSitePlan.getBoundsZoom(sitePlanBounds) + 0.9);
+        // Di layar lebar panel menutup sisi kanan peta: geser pusat agar pin tetap terlihat di sisi kiri
+        const shift = wide() ? 144 : 0;
+        const pin = mapSitePlan.project(latlng, z);
+        mapSitePlan.flyTo(mapSitePlan.unproject(pin.add([shift, 0]), z), z, { duration: 0.6 });
+        document.querySelectorAll('#node-list button').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === id));
+    }
+
+    function clearSelection() {
+        if (activeId === null) return;
+        activeId = null;
+        panelEl.hidden = true;
+        mapSitePlan.invalidateSize();
+        mapSitePlan.flyToBounds(sitePlanBounds, { duration: 0.6 });
+        document.querySelectorAll('#node-list button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    }
+    mapSitePlan.on('click', clearSelection);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') clearSelection(); });
 
     // Koordinat [leafY, leafX] = [imgHeight - pixelY, pixelX] berdasarkan deteksi piksel
     const sitePlanHotspots = {
@@ -459,24 +529,39 @@
         'RN-08-01': [203, 493],
     };
 
+    const markersById = {};
     nodesData.forEach(n => {
         const coords = sitePlanHotspots[n.node_id];
         if (!coords) return;
         const color = nodeColors[n.node_type] || '#2563eb';
-        L.marker(coords, { icon: createTeardropIcon(color, n.is_critical, 26) })
+        markersById[n.node_id] = L.marker(coords, { icon: createTeardropIcon(color, n.is_critical, 26), keyboard: true, title: n.node_id + ': ' + (n.label || '') })
             .addTo(mapSitePlan)
-            .bindPopup(buildNodePopup(n), { autoPan: true, autoPanPadding: [20, 20] })
-            .bindTooltip('<b>' + n.node_id + '</b>: ' + getValText(n), { direction: 'top', offset: [0, -36] });
+            .bindTooltip('<b>' + n.node_id + '</b>: ' + getValText(n), { direction: 'top', offset: [0, -36] })
+            .on('click', () => selectNode(n.node_id, buildDetail(n), coords));
+    });
+
+    // Daftar semua titik di bawah peta: klik/Enter membuka popup titik yang sama
+    const nodeListEl = document.getElementById('node-list');
+    const listItems = nodesData.filter(n => markersById[n.node_id]).map(n => ({ id: n.node_id, label: n.label || '', color: nodeColors[n.node_type] || '#2563eb', val: getValText(n) }));
+    listItems.push({ id: 'POS-RW-08', label: 'Posko RW 08', color: '#ec4899', val: 'Kiosk Aktif' });
+    listItems.forEach(it => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'flex items-center gap-2 px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-600 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400';
+        b.innerHTML = '<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:' + it.color + '"></span>' +
+            '<span class="min-w-0"><span class="block font-mono text-[11px] font-bold text-white">' + it.id + '</span>' +
+            '<span class="block text-[11px] text-slate-400 truncate">' + it.val + '</span></span>';
+        b.dataset.id = it.id;
+        b.addEventListener('click', () => (it.id === 'POS-RW-08' ? kioskMarker : markersById[it.id]).fire('click'));
+        nodeListEl.appendChild(b);
     });
 
     // Posko Kiosk RW 08 (Pink)
-    const kioskPopup = renderPopup('POS-RW-08', 'Pos Satpam Utama & Monitor Kiosk 24 Jam', 'DASHBOARD', 'Kiosk Aktif', 'RW 08', '220', false, nodeDescriptions['POS-RW-08']);
-    L.marker([261, 521], { icon: createTeardropIcon('#ec4899', false, 26) })
+    const kioskCoords = [261, 521];
+    const kioskMarker = L.marker(kioskCoords, { icon: createTeardropIcon('#ec4899', false, 26), keyboard: true, title: 'POS-RW-08: Posko RW 08' })
         .addTo(mapSitePlan)
-        .bindPopup(kioskPopup, { autoPan: true, autoPanPadding: [20, 20] })
-        .bindTooltip('<b>POSKO RW 08</b>: Kiosk Satpam', { direction: 'top', offset: [0, -36] });
-
-
+        .bindTooltip('<b>POSKO RW 08</b>: Kiosk Satpam', { direction: 'top', offset: [0, -36] })
+        .on('click', () => selectNode('POS-RW-08', kioskDetail, kioskCoords));
 
     // 2. Grafik Time-Series Chart.js
     const ctx = document.getElementById('timeSeriesChart').getContext('2d');

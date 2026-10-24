@@ -46,7 +46,7 @@ class TelemetryApiController extends Controller
 
         // Jika terpicu alert baru, dispatch notifikasi WhatsApp
         if (isset($result['alert']) && $result['alert'] !== null) {
-            $this->whatsappDispatcher->dispatch($result['alert'], true);
+            $this->whatsappDispatcher->dispatch($result['alert']);
         }
 
         return response()->json([
@@ -142,7 +142,7 @@ class TelemetryApiController extends Controller
         ]);
 
         // Dispatch notifikasi jika disetujui
-        $dispatchResult = $this->whatsappDispatcher->dispatch($alert, true);
+        $dispatchResult = $this->whatsappDispatcher->dispatch($alert);
 
         return response()->json([
             'success' => true,

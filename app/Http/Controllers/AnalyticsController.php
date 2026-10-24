@@ -38,9 +38,7 @@ class AnalyticsController extends Controller
         $falseAlarmsCount = Alert::where('is_false_alarm', true)->count();
 
         // M-07: Cakupan Penerima WhatsApp (KK RT 06–11)
-        $totalHouseholds = Zone::sum('household_cnt') ?: 240;
         $registeredCount = Recipient::where('is_active', true)->count();
-        $coveragePct = round(min(100.0, ($registeredCount / $totalHouseholds) * 100.0), 1);
 
         $kpis = [
             'm01_latency' => [
@@ -74,10 +72,11 @@ class AnalyticsController extends Controller
                 'badge' => 'Terkendali',
             ],
             'm07_coverage' => [
-                'target' => '100% perwakilan KK RT 06–11',
-                'current' => "{$registeredCount}/{$totalHouseholds} KK ({$coveragePct}%)",
-                'status' => $coveragePct >= 90.0 ? 'MEETS_TARGET' : 'NEEDS_ATTENTION',
-                'badge' => "{$coveragePct}% Terdaftar",
+                'target' => '100% perwakilan KK dan petugas keamanan',
+                'current' => "{$registeredCount} penerima terdaftar",
+                // Proposal tidak memuat jumlah KK, jadi persentase cakupan belum bisa dihitung; isi setelah RW mendata perwakilan KK
+                'status' => 'NEEDS_ATTENTION',
+                'badge' => 'Perlu data KK',
             ],
         ];
 

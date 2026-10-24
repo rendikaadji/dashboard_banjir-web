@@ -2,7 +2,10 @@
 
 namespace App\Services\Notification;
 
+use App\Jobs\SendWhatsAppMessage;
 use App\Models\Alert;
+use App\Models\Node;
+use App\Services\Telemetry\DerivedMetricsService;
 use App\Models\AlertDelivery;
 use App\Models\Recipient;
 use App\Models\RecipientGroup;
@@ -14,11 +17,12 @@ class WhatsAppDispatcher
     /**
      * Kirim notifikasi alert ke penerima sesuai tingkatan level dan segmentasi zona (PRD §10.1 & §10.2).
      *
-     * @param  bool  $isDryRun  Simulasi tanpa mengirim HTTP request sebenarnya
+     * @param  bool|null  $isDryRun  true = simulasi tanpa HTTP request; null = simulasi hanya jika FONNTE_TOKEN kosong
      * @return array{total_queued: int, total_sent: int, avg_latency_ms: float}
      */
-    public function dispatch(Alert $alert, bool $isDryRun = true): array
+    public function dispatch(Alert $alert, ?bool $isDryRun = null): array
     {
+        $isDryRun ??= ! config('services.fonnte.token');
         $startTime = microtime(true);
         $alertStartedAt = $alert->started_at ?? Carbon::now();
 
@@ -65,6 +69,13 @@ class WhatsAppDispatcher
             $sendTime = microtime(true);
             $latencyMs = (int) max(10, round(($sendTime - $startTime) * 1000 + mt_rand(400, 650)));
 
+            if (! $isDryRun) {
+                $this->enqueue($alert, $recipient->phone_e164, $messageText);
+                $totalSent++;
+
+                continue;
+            }
+
             $delivery = AlertDelivery::create([
                 'alert_id' => $alert->id,
                 'channel' => AlertDelivery::CHANNEL_WHATSAPP,
@@ -85,6 +96,13 @@ class WhatsAppDispatcher
         foreach ($groups as $group) {
             $now = Carbon::now();
             $latencyMs = (int) max(10, round((microtime(true) - $startTime) * 1000 + mt_rand(500, 750)));
+
+            if (! $isDryRun && $group->wa_group_id) {
+                $this->enqueue($alert, $group->wa_group_id, $messageText);
+                $totalSent++;
+
+                continue;
+            }
 
             AlertDelivery::create([
                 'alert_id' => $alert->id,
@@ -113,6 +131,20 @@ class WhatsAppDispatcher
         ];
     }
 
+    private function enqueue(Alert $alert, string $target, string $message): void
+    {
+        $delivery = AlertDelivery::create([
+            'alert_id' => $alert->id,
+            'channel' => AlertDelivery::CHANNEL_WHATSAPP,
+            'target' => $target,
+            'queued_at' => now(),
+            'status' => AlertDelivery::STATUS_QUEUED,
+            'retry_count' => 0,
+        ]);
+
+        SendWhatsAppMessage::dispatch($delivery->id, $message);
+    }
+
     /**
      * Susun format teks pesan resmi sesuai template PRD §10.2.
      */
@@ -123,7 +155,10 @@ class WhatsAppDispatcher
         $tma = $alert->trigger_value ?? 0.0;
         $waktu = Carbon::now()->isoFormat('D MMM Y, HH.mm').' WIB';
         $dashboardUrl = url('/dashboard');
-        $publicUrl = url('/public');
+        $publicUrl = url('/');
+        $flow = Node::where('node_type', Node::TYPE_FLOW)->with('latestReading')->get()->map->latestReading->filter()->max('flow_velocity_ms');
+        $boatStatus = app(DerivedMetricsService::class)->calculateBoatStatus((float) $tma, $flow)['label'];
+        $evacuationPoint = config('services.public.evacuation_point') ?: 'titik aman yang ditentukan pengurus RW';
 
         if ($alert->level === 2) {
             return <<<TEXT
@@ -142,10 +177,10 @@ TEXT;
 Taman Cipulir Estate | {$waktu}
 
 Tinggi air {$tma} cm di {$nodeLabel} ({$zoneName})
-Status Perahu: AMAN DITURUNKAN (> 60 cm)
+Status Perahu: {$boatStatus}
 
 TINDAKAN SEGERA:
-1. Pindahkan kendaraan ke titik evakuasi (Masjid Al-Ikhlas / Pos RW 08)
+1. Pindahkan kendaraan ke {$evacuationPoint}
 2. Amankan barang berharga & aliran listrik rumah
 3. Prioritaskan lansia, anak-anak, dan warga yang sakit
 4. Ikuti instruksi petugas satpam / satgas bencana

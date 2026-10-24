@@ -98,6 +98,38 @@ composer run dev     # server + queue + vite sekaligus
 
 Atau, jika memakai Herd, buka `http://dashboard_banjir-web.test`.
 
+### Alamat halaman
+
+| Alamat | Isi |
+| ------ | --- |
+| `/` | Landing page **publik** (tanpa login): status banjir, kondisi per RT, riwayat, cara gabung grup WhatsApp, info kawasan TCE |
+| `/admin` | Dashboard dan semua halaman pengelolaan (`/admin/dashboard`, `/admin/kiosk`, `/admin/nodes`, `/admin/alerts`, `/admin/thresholds`, `/admin/recipients`, `/admin/analytics`, `/admin/system`) |
+| `/public` | Dialihkan ke `/` |
+
+> **Belum ada login untuk `/admin`.** Jangan buka ke internet sebelum autentikasi dipasang.
+
+### Variabel `.env` tambahan
+
+| Variabel | Fungsi |
+| -------- | ------ |
+| `FONNTE_TOKEN`, `FONNTE_URL` | Token gateway WhatsApp Fonnte. Kosong = pengiriman disimulasikan (tidak ada pesan keluar) |
+| `PUBLIC_WA_GROUP_URL` | Tautan undangan grup WhatsApp di landing |
+| `PUBLIC_CONTACT_PHONE`, `PUBLIC_CONTACT_EMAIL` | Kontak pengurus RW 08 di landing. Kosong = tampil `[ISI DATA]` |
+| `PUBLIC_EMERGENCY_PHONE`, `PUBLIC_SATGAS_PHONE` | Dipakai API `/api/v1/public/status` |
+| `PUBLIC_EVACUATION_POINT` | Titik evakuasi (belum ada di proposal). Kosong = pesan memakai "titik aman yang ditentukan pengurus RW" |
+
+### Pengiriman WhatsApp
+
+Pengiriman lewat **queue** (`QUEUE_CONNECTION=database`), jadi worker harus jalan:
+
+```bash
+php artisan queue:work
+```
+
+Status tiap pesan (`QUEUED`, `SENT`, `FAILED`) dan `latency_ms` tercatat di tabel `alert_deliveries`. Gagal dicoba ulang 3 kali (jeda 2, 10, 60 detik). Fonnte membalas HTTP 200 meski gagal, jadi status dibaca dari isi respons; "device disconnected" berarti perangkat belum tersambung di dashboard Fonnte. Paket gratis menambahkan tulisan "sent via fonnte.com" pada pesan.
+
+Simulasi data sensor: `php artisan fews:simulate`. Data sensor lebih dari 15 menit dianggap tidak tersedia dan landing tidak menampilkan status Aman.
+
 Jika perubahan frontend tidak muncul:
 
 ```bash
@@ -374,11 +406,11 @@ Pelanggaran dicatat sebagai temuan proyek (lihat [AI Usage Policy §17](docs/AI-
 ## 13. Struktur Folder
 
 ```text
-app/            Kode aplikasi Laravel (model, controller, service)
+app/            Kode aplikasi Laravel (model, controller, service, `Jobs/SendWhatsAppMessage`)
 bootstrap/      Bootstrap framework
-config/         Konfigurasi
+config/         Konfigurasi (`tce.php` = fakta kawasan dari proposal EPICS, `services.php` = Fonnte dan kontak publik)
 database/       Migrasi, factory, seeder
-docs/           PRD.md, AI-USAGE-POLICY.md, AI-USAGE-LOG.md
+docs/           PRD.md, AI-USAGE-POLICY.md, DESIGN.md, AI-USAGE-LOG.md
 public/         Entry point web & aset publik
 resources/      View (Blade), CSS, JS
 routes/         Definisi route

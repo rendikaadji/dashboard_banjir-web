@@ -22,7 +22,7 @@
                 <span class="text-[11px] font-bold text-slate-400 block">{{ $z->code }}</span>
                 <span class="font-mono text-xl font-extrabold text-white mt-0.5 block">{{ $z->recipients_count }}</span>
                 <span class="text-[10px] text-emerald-400 font-semibold block">
-                    {{ round(($z->recipients_count / max(1, $z->household_cnt)) * 100) }}% KK
+                    penerima
                 </span>
             </div>
         @endforeach

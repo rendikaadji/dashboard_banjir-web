@@ -5,6 +5,38 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
+    --color-forest: #0a2118;
+    --color-forest-soft: #12342a;
+    --color-lime: #b8e04a;
+    --color-leaf: #2d7a35;
+    --color-mint: #eef6e4;
+    --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Tema terang admin: memetakan skala warna gelap lama ke palet landing (hutan, lime, mint)
+   sehingga semua halaman admin ikut berganti tanpa menulis ulang tiap kelas. */
+.admin-theme {
+    --color-slate-950: #f3f7ec;
+    --color-slate-900: #ffffff;
+    --color-slate-800: #e3e9da;
+    --color-slate-700: #cfd8c4;
+    --color-slate-600: #6b7a63;
+    --color-slate-500: #5b6a53;
+    --color-slate-400: #4b5a44;
+    --color-slate-300: #34422e;
+    --color-slate-200: #1f2d1a;
+    --color-slate-100: #14231a;
+    --color-slate-50: #0a2118;
+
+    --color-red-950: #fef2f2; --color-red-900: #fee2e2; --color-red-800: #fecaca; --color-red-400: #dc2626; --color-red-300: #b91c1c; --color-red-200: #991b1b; --color-red-100: #7f1d1d;
+    --color-rose-400: #e11d48; --color-rose-300: #be123c;
+    --color-emerald-950: #ecfdf5; --color-emerald-900: #d1fae5; --color-emerald-800: #a7f3d0; --color-emerald-400: #059669; --color-emerald-300: #047857; --color-emerald-100: #064e3b;
+    --color-amber-950: #fffbeb; --color-amber-800: #fde68a; --color-amber-400: #b45309; --color-amber-100: #78350f;
+    --color-orange-950: #fff7ed; --color-orange-800: #fed7aa; --color-orange-400: #c2410c; --color-orange-100: #7c2d12;
+    --color-cyan-950: #ecfeff; --color-cyan-400: #0e7490; --color-cyan-300: #155e75;
+}
+.admin-theme .text-white { color: var(--color-forest); }
+/* Tombol atau lencana berlatar solid tetap bertulisan putih */
+.admin-theme :is([class*="bg-orange-5"], [class*="bg-orange-6"], [class*="bg-red-5"], [class*="bg-red-6"], [class*="bg-emerald-5"], [class*="bg-emerald-6"], [class*="bg-cyan-5"], [class*="bg-cyan-6"], [class*="bg-amber-6"], [class*="bg-rose-5"], [class*="bg-rose-6"]).text-white { color: #fff; }

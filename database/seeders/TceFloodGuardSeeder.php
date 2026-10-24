@@ -30,12 +30,12 @@ class TceFloodGuardSeeder extends Seeder
 
         // 2. Inisialisasi Zona (RT 06 s/d RT 11)
         $zonesData = [
-            ['code' => 'RT-06', 'name' => 'RT 06 / RW 08 (Sektor Barat)', 'household_cnt' => 40, 'flood_prone' => true],
-            ['code' => 'RT-07', 'name' => 'RT 07 / RW 08 (Sektor Barat Laut)', 'household_cnt' => 38, 'flood_prone' => true],
-            ['code' => 'RT-08', 'name' => 'RT 08 / RW 08 (Sektor Timur & Balai RW)', 'household_cnt' => 45, 'flood_prone' => true],
-            ['code' => 'RT-09', 'name' => 'RT 09 / RW 08 (Depan Masjid - Titik Kritis)', 'household_cnt' => 42, 'flood_prone' => true],
-            ['code' => 'RT-10', 'name' => 'RT 10 / RW 08 (Gerbang Utama TCE)', 'household_cnt' => 35, 'flood_prone' => true],
-            ['code' => 'RT-11', 'name' => 'RT 11 / RW 08 (Kolam Retensi Selatan)', 'household_cnt' => 40, 'flood_prone' => true],
+            ['code' => 'RT-06', 'name' => 'RT 06 / RW 08', 'household_cnt' => 40, 'flood_prone' => true],
+            ['code' => 'RT-07', 'name' => 'RT 07 / RW 08', 'household_cnt' => 38, 'flood_prone' => true],
+            ['code' => 'RT-08', 'name' => 'RT 08 / RW 08', 'household_cnt' => 45, 'flood_prone' => true],
+            ['code' => 'RT-09', 'name' => 'RT 09 / RW 08', 'household_cnt' => 42, 'flood_prone' => true],
+            ['code' => 'RT-10', 'name' => 'RT 10 / RW 08', 'household_cnt' => 35, 'flood_prone' => true],
+            ['code' => 'RT-11', 'name' => 'RT 11 / RW 08', 'household_cnt' => 40, 'flood_prone' => true],
         ];
 
         $zones = [];

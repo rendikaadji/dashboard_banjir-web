@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Waktu relatif (diffForHumans) dalam bahasa Indonesia
+        \Carbon\Carbon::setLocale('id');
     }
 }

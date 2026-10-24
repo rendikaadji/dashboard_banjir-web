@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    // Kontak yang tampil di landing publik; kosong = tampil sebagai [ISI DATA]
+    'public' => [
+        'wa_group_url' => env('PUBLIC_WA_GROUP_URL'),
+        'emergency_phone' => env('PUBLIC_EMERGENCY_PHONE'),
+        'satgas_phone' => env('PUBLIC_SATGAS_PHONE'),
+        // Titik evakuasi belum ada di proposal; isi di .env setelah ditetapkan pengurus RW
+        'evacuation_point' => env('PUBLIC_EVACUATION_POINT'),
+    ],
+
+    'fonnte' => [
+        'url' => env('FONNTE_URL', 'https://api.fonnte.com/send'),
+        'token' => env('FONNTE_TOKEN'),
+    ],
+
 ];

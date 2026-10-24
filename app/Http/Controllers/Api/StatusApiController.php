@@ -144,10 +144,10 @@ class StatusApiController extends Controller
             'boat_status' => $boatStatus['label'],
             'updated_at' => Carbon::now()->isoFormat('D MMMM Y, HH:mm:ss').' WIB',
             'emergency_contacts' => [
-                'pos_satpam' => '021-7388XXXX',
-                'satgas_banjir' => '0812-XXXX-XXXX',
+                'pos_satpam' => config('services.public.emergency_phone'),
+                'satgas_banjir' => config('services.public.satgas_phone'),
             ],
-            'evacuation_center' => 'Masjid Al-Ikhlas & Pos RW 08',
+            'evacuation_center' => config('services.public.evacuation_point'),
             'disclaimer' => 'Sistem ini adalah alat bantu kesiapsiagaan dini, bukan jaminan mutlak. Tetap ikuti arahan petugas lapangan.',
         ]);
     }

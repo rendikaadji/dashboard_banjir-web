@@ -930,7 +930,7 @@ CRUD user, reset password, tabel audit yang bisa dicari.
 
 #### H-11 Halaman Publik (tanpa login)
 
-Satu layar mobile: status kompleks, TMA tertinggi, waktu update, 3 langkah tindakan sesuai level, tombol "Daftar terima notifikasi WhatsApp", nomor darurat pos satpam. **Tidak menampilkan** nomor telepon warga atau detail node individual.
+Alamat `/` (admin dipindah ke `/admin`). Satu halaman mobile-first: status kompleks, TMA tertinggi, waktu update, 3 langkah tindakan sesuai level, tombol gabung grup WhatsApp, kontak pengurus RW 08, kondisi per RT, riwayat kejadian, dan info kawasan TCE. Data sensor lebih dari 15 menit ditampilkan sebagai "Data belum tersedia", tidak pernah "Aman". **Tidak menampilkan** nomor telepon warga atau detail node individual.
 
 ### 13.4 Aksesibilitas
 
@@ -1307,7 +1307,7 @@ Peran universitas dijaga minimal (sesuai syarat EPICS): mahasiswa magang/skripsi
 
 | ID    | Pertanyaan                                                                                                                                                              | Dampak                                 | Perlu diputuskan sebelum    |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | --------------------------- |
-| OQ-01 | WhatsApp: Cloud API resmi (berbayar, stabil) atau gateway lokal (murah, risiko banned)?                                                                                 | Biaya & keandalan kanal utama          | Bulan 7                     |
+| OQ-01 | **Diputuskan sementara:** gateway Fonnte (terpasang, diuji ke satu nomor dan satu grup). Meta Cloud API tetap opsi bila risiko banned atau tulisan "sent via fonnte.com" tidak bisa diterima. WhatsApp: Cloud API resmi (berbayar, stabil) atau gateway lokal (murah, risiko banned)?                                                                                 | Biaya & keandalan kanal utama          | Bulan 7                     |
 | OQ-02 | Konektivitas node: WiFi kompleks, LoRa + gateway, atau SIM/GSM per node? Infografis menyebut LoRa, proposal menyebut WiFi ESP-32 — perlu diselaraskan                   | Arsitektur ingestion & biaya           | Bulan 2                     |
 | OQ-03 | Level 3 sepenuhnya otomatis, atau selalu melewati konfirmasi manusia (grace window)?                                                                                    | Kecepatan vs risiko false alarm        | Bulan 6                     |
 | OQ-04 | Sensor ultrasonik: HC-SR05 (tidak tahan air) vs JSN-SR04T/A02YYUW (waterproof)? Proposal menyebut HC-SR05 untuk pemakaian outdoor di atas saluran                       | Akurasi & umur perangkat               | Bulan 3 (sebelum pembelian) |
@@ -1394,3 +1394,4 @@ Minimal 30 pasang pengukuran, mencakup rentang rendah (< 50 cm), sedang (50–12
 | Versi | Tanggal     | Perubahan                                              | Penulis |
 | ----- | ----------- | ------------------------------------------------------ | ------- |
 | 1.0   | 27 Agu 2026 | Draft awal berdasarkan proposal EPICS in IEEE Mei 2026 | —       |
+| 1.1   | 24 Okt 2026 | Landing publik di `/` dan admin di `/admin`; integrasi WhatsApp nyata via Fonnte + queue + retry (OQ-01); fakta kawasan disamakan dengan proposal EPICS (6 dari 11 RT, ±1.300 jiwa, 13 ha, 11 pompa); KPI M07 tanpa angka KK sampai RW mendata; pesan Kritis menghitung status perahu dari data; ambang Waspada 70 cm (sistem) berbeda dari proposal (Level 1 di bawah 100 cm), belum diputuskan | —       |

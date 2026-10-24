@@ -105,32 +105,4 @@ class DashboardController extends Controller
             'nodes'
         ));
     }
-
-    /**
-     * H-11: Halaman Publik Warga (Tanpa login, mobile-first)
-     */
-    public function publicStatus(): View
-    {
-        $activeAlert = Alert::whereIn('status', [Alert::STATUS_ACTIVE, Alert::STATUS_NOTIFYING, Alert::STATUS_TRIGGERED])
-            ->latest('id')
-            ->first();
-
-        $currentLevel = $activeAlert ? $activeAlert->level : 0;
-        $nodes = Node::where('node_type', Node::TYPE_WATER_LEVEL)->with('latestReading', 'zone')->get();
-        $highestNode = $nodes->sortByDesc(fn ($n) => $n->latestReading?->water_level_cm ?? 0)->first();
-        $highestTma = $highestNode?->latestReading?->water_level_cm ?? 45.0;
-
-        $flowNode = Node::where('node_type', Node::TYPE_FLOW)->with('latestReading')->first();
-        $flowVelocity = $flowNode?->latestReading?->flow_velocity_ms ?? 0.20;
-
-        $boatStatus = $this->derivedService->calculateBoatStatus($highestTma, $flowVelocity);
-
-        return view('dashboard.public', compact(
-            'activeAlert',
-            'currentLevel',
-            'highestNode',
-            'highestTma',
-            'boatStatus'
-        ));
-    }
 }
