@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="icon" href="{{ asset('favicon.svg') }}?v=2" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-32.png') }}?v=2" type="image/png" sizes="32x32">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v=2">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}?v=2">
     <title>MONITOR POS SATPAM — TCE FloodGuard RW 08</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
